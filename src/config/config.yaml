@@ -1,0 +1,9 @@
+openai:
+  api_key: ${OPENAI_API_KEY}
+  model: "gpt-4o-mini"
+  max_tokens: 2000
+  temperature: 0.7
+
+server:
+  port: 50051
+  max_workers: 10

@@ -1,12 +1,12 @@
 from dotenv import load_dotenv
 from openai import OpenAI
 from colorama import Fore
-
-from agentic_patterns.utils.completions import build_prompt_structure
-from agentic_patterns.utils.completions import completions_create
-from agentic_patterns.utils.completions import FixedFirstChatHistory
-from agentic_patterns.utils.completions import update_chat_history
-from agentic_patterns.utils.logging import fancy_step_tracker
+import os
+from src.agentic_patterns.utils.completions import build_prompt_structure
+from src.agentic_patterns.utils.completions import completions_create
+from src.agentic_patterns.utils.completions import FixedFirstChatHistory
+from src.agentic_patterns.utils.completions import update_chat_history
+from src.agentic_patterns.utils.logging import fancy_step_tracker
 
 load_dotenv()
 
@@ -33,12 +33,20 @@ class ReflectionAgent:
         client (OpenAI): An instance of the OpenAI client to interact with the language model.
     """
 
-    def __init__(self, model: str = "gpt-4o-mini"):
+    def __init__(self, config: dict):
         """
         Initializes the ReflectionAgent with the specified model.
         """
-        self.client = OpenAI()
-        self.model = model
+        self.config = config
+        # Replace environment variables in config - update path to nested openai.api_key
+        if 'openai' in self.config and 'api_key' in self.config['openai'] and self.config['openai']['api_key'].startswith('${'):
+            env_var = self.config['openai']['api_key'][2:-1]  # Remove ${ and }
+            self.config['openai']['api_key'] = os.environ.get(env_var)
+            if not self.config['openai']['api_key'] or not self.config['openai']['api_key'].startswith('sk-'):
+                raise ValueError(f"Invalid or missing OpenAI API key. Please check your environment variable {env_var}")
+
+        self.client = OpenAI(api_key=config['openai']['api_key'])
+        self.model = config['openai']['model']
     
     def _request_completion(
         self,
