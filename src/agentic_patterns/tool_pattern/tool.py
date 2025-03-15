@@ -38,19 +38,33 @@ def validate_arguments(tool_call: dict, tool_signature: dict) -> dict:
     """
     properties = tool_signature["parameters"]["properties"]
 
-    # TODO: This is overly simplified but enough for simple Tools.
+    # Type mapping for basic types
     type_mapping = {
         "int": int,
         "str": str,
         "bool": bool,
         "float": float,
+        "list": list,
+        "List": list
     }
 
     for arg_name, arg_value in tool_call["arguments"].items():
         expected_type = properties[arg_name].get("type")
-
-        if not isinstance(arg_value, type_mapping[expected_type]):
-            tool_call["arguments"][arg_name] = type_mapping[expected_type](arg_value)
+        
+        # Handle List type
+        if expected_type in ["list", "List"]:
+            if not isinstance(arg_value, list):
+                # If a single value is provided, convert it to a list
+                tool_call["arguments"][arg_name] = [arg_value] if arg_value else []
+            continue
+            
+        # Handle basic types
+        if not isinstance(arg_value, type_mapping.get(expected_type, object)):
+            try:
+                tool_call["arguments"][arg_name] = type_mapping[expected_type](arg_value)
+            except (KeyError, ValueError):
+                # If conversion fails, keep the original value
+                pass
 
     return tool_call
 

@@ -23,7 +23,7 @@ def chat_loop():
         
         try:
             # Process query through triage agent (with verbose mode for demonstration)
-            response = agent.process_query(user_input, verbose=True)
+            response = agent.run(user_input, verbose=True)
             print(f"\nBot: {response}")
         except Exception as e:
             print(f"\nError: {str(e)}")

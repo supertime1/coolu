@@ -74,8 +74,7 @@ class TriageAgent:
             messages=triage_history,
             model=self.model,
         )
-        decision_text = response.choices[0].message.content
-        return self._extract_decision(decision_text)
+        return self._extract_decision(response)
 
     def run(self, user_input: str, verbose: int = 0) -> tuple[str, str]:
         """
@@ -88,6 +87,7 @@ class TriageAgent:
         Returns:
             tuple[str, str]: The agent and reason for the decision.
         """
+        print(f"Triage agent running with user input: {user_input}")
         agent, reason = self.decide_agent(user_input)
 
         if verbose != 0:
