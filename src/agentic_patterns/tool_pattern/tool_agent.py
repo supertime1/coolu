@@ -3,8 +3,9 @@ import re
 
 from colorama import Fore
 from dotenv import load_dotenv
-from groq import Groq
-
+from openai import OpenAI
+import os
+import importlib
 from agentic_patterns.tool_pattern.tool import Tool
 from agentic_patterns.tool_pattern.tool import validate_arguments
 from agentic_patterns.utils.completions import build_prompt_structure
@@ -44,20 +45,53 @@ class ToolAgent:
     Attributes:
         tools (Tool | list[Tool]): A list of tools available to the agent.
         model (str): The model to be used for generating tool calls and responses.
-        client (Groq): The Groq client used to interact with the language model.
+        client (OpenAI): The OpenAI client used to interact with the language model.
         tools_dict (dict): A dictionary mapping tool names to their corresponding Tool objects.
     """
 
-    def __init__(
-        self,
-        tools: Tool | list[Tool],
-        model: str = "llama3-groq-70b-8192-tool-use-preview",
-    ) -> None:
-        self.client = Groq()
-        self.model = model
-        self.tools = tools if isinstance(tools, list) else [tools]
+    def __init__(self, config: dict) -> None:
+        self.client = OpenAI()
+        self.config = config
+        # Replace environment variables in config - update path to nested openai.api_key
+        if 'openai' in self.config and 'api_key' in self.config['openai'] and self.config['openai']['api_key'].startswith('${'):
+            env_var = self.config['openai']['api_key'][2:-1]  # Remove ${ and }
+            self.config['openai']['api_key'] = os.environ.get(env_var)
+            if not self.config['openai']['api_key'] or not self.config['openai']['api_key'].startswith('sk-'):
+                raise ValueError(f"Invalid or missing OpenAI API key. Please check your environment variable {env_var}")
+
+        self.client = OpenAI(api_key=config['openai']['api_key'])
+        self.model = config['openai']['model']
+
+        # load tools
+        self.tools = self.load_tools()
         self.tools_dict = {tool.name: tool for tool in self.tools}
 
+    def load_tools(self) -> list[Tool]:
+        """
+        Loads the tools from the tools directory.
+        
+        Returns:
+            List[Tool]: List of available tools
+        """
+        tools = []
+        tools_dir = os.path.join(os.path.dirname(__file__), 'tools')
+        
+        # Skip __init__.py and __pycache__
+        for file in os.listdir(tools_dir):
+            if file.endswith('.py') and not file.startswith('__'):
+                # Convert filename to module path
+                module_name = f"src.agentic_patterns.tool_pattern.tools.{file[:-3]}"
+                try:
+                    # Import the module
+                    module = importlib.import_module(module_name)
+                    # Get the tools list from the module
+                    if hasattr(module, 'tools'):
+                        tools.extend(module.tools)
+                except Exception as e:
+                    print(f"Error loading tools from {file}: {e}")
+        
+        return tools
+    
     def add_tool_signatures(self) -> str:
         """
         Collects the function signatures of all available tools.
@@ -99,10 +133,7 @@ class ToolAgent:
 
         return observations
 
-    def run(
-        self,
-        user_msg: str,
-    ) -> str:
+    def run(self, user_msg: str) -> str:
         """
         Handles the full process of interacting with the language model and executing a tool based on user input.
 

@@ -1,18 +1,18 @@
-from src.agentic_patterns.reflection_pattern.relection_agent import ReflectionAgent
-import asyncio
+from src.agentic_patterns.triage_pattern.triage_agent import TriageAgent
 import os
 import yaml
 
-async def chat_loop():
-    # Initialize the reflection agent
-
+def chat_loop():
+    # Load configuration
     config_path = os.path.join(os.path.dirname(__file__), 'src/config/config.yaml')
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
         
-    agent = ReflectionAgent(config=config)
+    # Initialize the triage agent
+    agent = TriageAgent(config=config)
     
     print("Welcome to the AI Bot! Type 'exit' to quit.")
+    print("(This bot can help with both general conversations and specific tasks like searching for articles)")
     
     while True:
         # Get user input
@@ -21,15 +21,15 @@ async def chat_loop():
         if user_input.lower() == 'exit':
             break
         
-        # Get agent's response with reflection
-        response = agent.run(user_input)
-        print(f"\nBot: {response}")
-        
-        # Add agent's response to history
-        # reflection_history.append({"role": "assistant", "content": response})
+        try:
+            # Process query through triage agent (with verbose mode for demonstration)
+            response = agent.process_query(user_input, verbose=True)
+            print(f"\nBot: {response}")
+        except Exception as e:
+            print(f"\nError: {str(e)}")
 
 def main():
-    asyncio.run(chat_loop())
+    chat_loop()
 
 if __name__ == "__main__":
     main() 
