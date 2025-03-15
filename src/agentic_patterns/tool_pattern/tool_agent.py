@@ -6,13 +6,15 @@ from dotenv import load_dotenv
 from openai import OpenAI
 import os
 import importlib
-from agentic_patterns.tool_pattern.tool import Tool
-from agentic_patterns.tool_pattern.tool import validate_arguments
-from agentic_patterns.utils.completions import build_prompt_structure
-from agentic_patterns.utils.completions import ChatHistory
-from agentic_patterns.utils.completions import completions_create
-from agentic_patterns.utils.completions import update_chat_history
-from agentic_patterns.utils.extraction import extract_tag_content
+from typing import List
+from .tool import Tool, validate_arguments
+from ..utils.completions import (
+    build_prompt_structure,
+    ChatHistory,
+    completions_create,
+    update_chat_history
+)
+from ..utils.extraction import extract_tag_content
 
 load_dotenv()
 

@@ -35,16 +35,18 @@ Always respond with the XML tags and choose only one agent."""
 
 class TriageAgent:
     def __init__(self, config: dict):
+        """Initialize the triage agent with configuration."""
+        self.config = config  # Store the config
         if 'openai' in self.config and 'api_key' in self.config['openai'] and self.config['openai']['api_key'].startswith('${'):
             env_var = self.config['openai']['api_key'][2:-1]  # Remove ${ and }
             self.config['openai']['api_key'] = os.environ.get(env_var)
             if not self.config['openai']['api_key'] or not self.config['openai']['api_key'].startswith('sk-'):
                 raise ValueError(f"Invalid or missing OpenAI API key. Please check your environment variable {env_var}")
 
-        self.client = OpenAI(api_key=config['openai']['api_key'])
-        self.model = config['openai']['model']
-        self.tool_agent = ToolAgent(config=config)
-        self.reflection_agent = ReflectionAgent(config=config)
+        self.client = OpenAI(api_key=self.config['openai']['api_key'])
+        self.model = self.config['openai']['model']
+        self.tool_agent = ToolAgent(config)
+        self.reflection_agent = ReflectionAgent(config)
     
     def _extract_decision(self, response_text: str) -> tuple[str, str]:
         """Extract agent decision and reason from XML response."""

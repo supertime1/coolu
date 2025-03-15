@@ -1,6 +1,6 @@
-from tools.search_tools import tools as search_tools
+from .tools.search_tools import tools as search_tools
 
-# Combine all tools into a single list
+# Export all tools
 available_tools = [
     *search_tools,
 ]
