@@ -1,4 +1,5 @@
-from src.agentic_patterns.triage_pattern.triage_agent import TriageAgent
+from src.agentic_patterns.triage_pattern.supervisor_agent import SupervisorAgent
+from src.agentic_patterns.planning_pattern.react_agent import ReactAgent
 import os
 import yaml
 
@@ -9,7 +10,10 @@ def chat_loop():
         config = yaml.safe_load(f)
         
     # Initialize the triage agent
-    agent = TriageAgent(config=config)
+
+    web_search_agent = ReactAgent(tools=[], name="web_search_agent", system_prompt="You are a web search agent. You are given a user query and you need to search the web for the most relevant information.")
+
+    agent = SupervisorAgent(config=config, agents=[web_search_agent])
     
     print("Welcome to the AI Bot! Type 'exit' to quit.")
     print("(This bot can help with both general conversations and specific tasks like searching for articles)")

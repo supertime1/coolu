@@ -1,6 +1,7 @@
 from openai import OpenAI
 from ..tool_pattern.tool_agent import ToolAgent
 from ..reflection_pattern.relection_agent import ReflectionAgent
+from ..planning_pattern.react_agent import ReactAgent
 from ..utils.completions import completions_create, ChatHistory, build_prompt_structure
 import os
 
@@ -33,8 +34,8 @@ Guidelines for selection:
 
 Always respond with the XML tags and choose only one agent."""
 
-class TriageAgent:
-    def __init__(self, config: dict):
+class SupervisorAgent:
+    def __init__(self, config: dict, agents: list[ReactAgent]):
         """Initialize the triage agent with configuration."""
         self.config = config  # Store the config
         if 'openai' in self.config and 'api_key' in self.config['openai'] and self.config['openai']['api_key'].startswith('${'):
@@ -45,8 +46,9 @@ class TriageAgent:
 
         self.client = OpenAI(api_key=self.config['openai']['api_key'])
         self.model = self.config['openai']['model']
-        self.tool_agent = ToolAgent(config)
-        self.reflection_agent = ReflectionAgent(config)
+        self.agents = agents
+        # self.tool_agent = ToolAgent(config)
+        # self.reflection_agent = ReflectionAgent(config)
     
     def _extract_decision(self, response_text: str) -> tuple[str, str]:
         """Extract agent decision and reason from XML response."""
@@ -94,9 +96,14 @@ class TriageAgent:
             print(f"\nTriage Decision: {agent}")
             print(f"Reason: {reason}\n")
             
-        if agent == "TOOL_AGENT":
-            response = self.tool_agent.run(user_input)
-        else:
-            response = self.reflection_agent.run(user_input)
-        
+        # if agent == "TOOL_AGENT":
+        #     response = self.tool_agent.run(user_input)
+        # else:
+        #     response = self.reflection_agent.run(user_input)
+
+        # find the agent that matches the agent type
+        for agent in self.agents:
+            if agent.name == agent:
+                response = agent.run(user_input)
+                break
         return response
